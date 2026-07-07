@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress DashBoard</title>
+    <style>
+        /* --- ブルー基調のスタイリッシュなカラーパレット --- */
+        :root {
+            --primary: #2563eb;         /* アクセントブルー */
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(219, 234, 254, 0.6); /* 薄い青（ハイライト用） */
+            
+            /* グラデーションとグラスモーフィズム */
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-hover: rgba(255, 255, 255, 0.95);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            
+            --border: rgba(147, 197, 253, 0.5); /* Blue 300 半透明 */
+            --text-main: #1e3a8a;       /* 深いネイビー（Blue 900） */
+            --text-muted: #60a5fa;      /* Blue 400 */
+            
+            --accent: #f59e0b;          /* 重要アイコン用（オレンジ） */
+            --danger: #ef4444;
+            --success: #0ea5e9;         /* 完了もブルー系（Sky 500）に統一 */
+            
+            /* アラート系の背景色（半透明） */
+            --hl-week: rgba(254, 252, 232, 0.7);
+            --hl-24h: rgba(255, 247, 237, 0.8);
+            --hl-past: rgba(254, 242, 242, 0.8);
+            
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 4px 6px rgba(37, 99, 235, 0.05);
+            --shadow-md: 0 10px 25px rgba(37, 99, 235, 0.1);
+        }
+
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed; /* スクロールしても背景を固定 */
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 30px 20px; 
+            line-height: 1.5; 
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .header-title { 
+            font-size: 1.75rem; 
+            font-weight: 800; 
+            color: var(--text-main); 
+            margin-bottom: 25px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            text-shadow: 0 2px 4px rgba(255,255,255,0.5);
+        }
+        
+        /* ナビゲーションタブ */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+        .tab { 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            border-radius: 12px 12px 0 0; 
+            color: var(--text-muted); 
+            font-weight: 700; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            border: 1px solid transparent; 
+            border-bottom: none; 
+            margin-bottom: -2px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+        }
+        .tab:hover { background: rgba(255, 255, 255, 0.6); color: var(--primary); }
+        .tab.active { 
+            background: var(--surface); 
+            color: var(--primary); 
+            border-color: var(--border); 
+            border-bottom-color: var(--surface); 
+            box-shadow: 0 -4px 10px rgba(37, 99, 235, 0.05);
+        }
+
+        /* コンテンツエリア（グラスモーフィズム） */
+        .tab-content { 
+            display: none; 
+            background: var(--surface); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px; 
+            border-radius: 0 16px 16px 16px; 
+            box-shadow: var(--shadow-md); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+        }
+        .tab-content.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* フォーム系 */
+        .input-card { 
+            background: rgba(255, 255, 255, 0.5); 
+            border: 1px solid var(--border); 
+            padding: 20px; 
+            border-radius: var(--radius-md); 
+            margin-bottom: 25px; 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
+        .controls-bar { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; justify-content: space-between; }
+        
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea { 
+            padding: 12px 16px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            font-family: inherit; 
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: all 0.2s; 
+            outline: none; 
+            box-sizing: border-box; 
+        }
+        input[type="text"]:focus, textarea:focus, select:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); 
+            background: #ffffff;
+        }
+        .search-box { 
+            width: 320px; 
+            padding-left: 40px !important; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%2360a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 12px center;
+        }
+        
+        button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .btn-main { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); }
+        .btn-main:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3); }
+        .btn-outline { background: rgba(255,255,255,0.7); border: 1px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2); }
+        .btn-success:hover { background: #0284c7; }
+        .btn-danger { background: transparent; color: var(--danger); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; }
+
+        /* トグルスイッチ */
+        .toggle-label-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; color: var(--primary); cursor: pointer; }
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(147, 197, 253, 0.5); transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* テーブルレイアウト */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; }
+        th { 
+            background: rgba(255,255,255,0.6); 
+            color: var(--primary); 
+            font-weight: 800; 
+            font-size: 0.9rem; 
+            padding: 15px; 
+            border-bottom: 2px solid var(--primary); 
+            text-align: left; 
+        }
+        td { padding: 18px 15px; border-bottom: 1px solid var(--border); vertical-align: top; transition: background 0.2s; }
+        
+        /* 状態ハイライト */
+        tr.row-important { background-color: var(--primary-light); }
+        tr.row-danger { background-color: var(--hl-past); }
+        tr.row-warning-24h { background-color: var(--hl-24h); }
+        tr.row-warning-week { background-color: var(--hl-week); }
+        tr:hover td { background-color: var(--surface-hover); }
+        tr td:first-child { border-left: 4px solid transparent; }
+        
+        tr.row-important td:first-child { border-left-color: var(--primary); }
+        tr.row-danger td:first-child { border-left-color: var(--danger); }
+        tr.row-warning-24h td:first-child { border-left-color: var(--accent); }
+        tr.row-warning-week td:first-child { border-left-color: #fde047; }
+        
+        /* サブタスク */
+        ul.subtask-list { margin: 12px 0 0 0; padding-left: 0; list-style: none; font-size: 0.9rem; }
+        ul.subtask-list li { margin-bottom: 6px; padding: 8px 12px; background: rgba(255,255,255,0.9); border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .subtask-name { flex-grow: 1; cursor: pointer; color: var(--text-main); }
+        .subtask-name:hover { color: var(--primary); text-decoration: underline; }
+
+        /* プログレスバー */
+        .progress-wrapper { display: flex; align-items: center; gap: 12px; }
+        .progress-container { flex-grow: 1; background-color: rgba(147, 197, 253, 0.3); border-radius: 99px; height: 10px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+        .progress-bar { height: 100%; background-color: var(--primary); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 99px; }
+        .progress-input { width: 60px; padding: 6px 8px !important; text-align: right; font-weight: 700; font-size: 0.9rem !important; }
+
+        .important-icon { cursor: pointer; font-size: 1.3rem; user-select: none; margin-right: 10px; vertical-align: middle; transition: 0.2s; }
+        .important-icon.active { color: var(--accent); filter: drop-shadow(0 0 4px rgba(245,158,11,0.4)); }
+        .important-icon.inactive { color: rgba(147, 197, 253, 0.6); }
+        .important-icon:hover { transform: scale(1.2); }
+
+        /* レポート出力画面 */
+        .report-form { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            background: rgba(255,255,255,0.5); 
+            padding: 30px; 
+            border-radius: var(--radius-md); 
+            border: 1px solid var(--border); 
+            margin-bottom: 20px; 
+        }
+        .report-form .full-width { grid-column: span 2; }
+        .report-form label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--primary); font-size: 0.95rem; }
+        
+        textarea.report-output { 
+            width: 100%; 
+            height: 400px; 
+            padding: 20px; 
+            border-radius: var(--radius-md); 
+            resize: vertical; 
+            font-family: 'Fira Code', 'Courier New', monospace; 
+            font-size: 0.95rem; 
+            background: #172554; /* 非常に深いネイビー（青基調のダーク） */
+            color: #eff6ff; 
+            border: 1px solid #1e3a8a;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-1 { flex: 1; }
+
+        /* モーダル */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); place-items: center; z-index: 1000; }
+        .modal.active { display: grid; animation: fadeInModal 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeInModal { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .modal-content { background: var(--surface); padding: 30px; border-radius: var(--radius-lg); width: 450px; box-shadow: var(--shadow-md); border: 1px solid rgba(255,255,255,0.8); }
+        .modal-content h3 { margin-top: 0; border-bottom: 2px solid var(--primary-light); padding-bottom: 12px; color: var(--primary); font-size: 1.3rem; }
+        .modal-actions { margin-top: 30px; display: flex; gap: 12px; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        ゼミ進捗＆タスク管理
+    </div>
+
+    <div class="nav-tabs">
+        <div class="tab active" onclick="switchTab('active')">進行中タスク</div>
+        <div class="tab" onclick="switchTab('completed')">完了タスク</div>
+        <div class="tab" onclick="switchTab('report')">レポート作成</div>
+    </div>
+
+    <div id="tab-active" class="tab-content active">
+        <div class="input-card">
+            <div style="flex-grow: 1; min-width: 220px;">
+                <input type="text" id="taskName" placeholder="新しいタスクを入力 (例: フレームレートの最適化)" style="width: 100%; border-color: var(--primary-light);" required>
+            </div>
+            <input type="date" id="taskDeadlineDate" title="期限(日付)">
+            <input type="time" id="taskDeadlineTime" title="期限(時刻) ※空欄なら23:59">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 700; color: var(--accent);">
+                <input type="checkbox" id="taskImportant" style="width: 18px; height: 18px;"> ★ 重要
+            </label>
+            <button class="btn-main" onclick="addTask()">タスクを追加</button>
+        </div>
+        
+        <div class="controls-bar">
+            <div class="flex-row">
+                <input type="text" id="searchActive" class="search-box" placeholder="タスク・サブタスクを検索..." onkeyup="renderAll()">
+                <select id="sortActive" onchange="renderAll()">
+                    <option value="deadline-asc">期限が近い順</option>
+                    <option value="deadline-desc">期限が遠い順</option>
+                    <option value="created-desc">追加日が新しい順</option>
+                    <option value="created-asc">追加日が古い順</option>
+                </select>
+            </div>
+            <label class="toggle-label-wrap">
+                <span class="toggle-switch">
+                    <input type="checkbox" id="pinImportantToggle" checked onchange="renderAll()">
+                    <span class="slider"></span>
+                </span>
+                重要タスクを上部に固定
+            </label>
+        </div>
+
+        <table id="activeTaskTable">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">タスク名 / サブタスク</th>
+                    <th style="width: 15%;">期限</th>
+                    <th style="width: 20%;">進捗</th>
+                    <th style="width: 25%; text-align: right;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="activeTaskList"></tbody>
+        </table>
+    </div>
+
+    <div id="tab-completed" class="tab-content">
+        <div class="controls-bar" style="margin-bottom: 25px;">
+            <input type="text" id="searchCompleted" class="search-box" placeholder="完了済みタスクを検索..." onkeyup="renderAll()">
+            <select id="sortCompleted" onchange="renderAll()">
+                <option value="completed-desc">完了日が新しい順</option>
+                <option value="completed-asc">完了日が古い順</option>
+            </select>
+        </div>
+        <table id="completedTaskTable">
+            <thead>
+                <tr>
+                    <th style="width: 45%;">タスク名</th>
+                    <th style="width: 25%;">完了日</th>
+                    <th style="width: 30%; text-align: right;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="completedTaskList"></tbody>
+        </table>
+    </div>
+
+    <div id="tab-report" class="tab-content">
+        <div class="report-form">
+            <div>
+                <label>氏名</label>
+                <input type="text" id="repName" value="みゆう">
+            </div>
+            <div>
+                <label>実施日時</label>
+                <div class="flex-row">
+                    <input type="date" id="repDate" class="flex-1">
+                    <input type="time" id="repStartTime">
+                    <span style="color:var(--primary); font-weight:bold;">-</span>
+                    <input type="time" id="repEndTime">
+                </div>
+            </div>
+            <div>
+                <label>研究テーマ名</label>
+                <input type="text" id="repTheme" value="CatcherX">
+            </div>
+            <div>
+                <label>関連ページ (PBL名など)</label>
+                <input type="text" id="repPages" value="">
+            </div>
+            <div class="full-width" style="border-top: 2px dashed var(--border); padding-top: 20px;">
+                <label>抽出期間 (この期間内に完了したものを「今週の進捗」とします)</label>
+                <div class="flex-row" style="max-width: 550px;">
+                    <input type="date" id="extStartDate" class="flex-1">
+                    <span style="color:var(--primary); font-weight:bold;">〜</span>
+                    <input type="date" id="extEndDate" class="flex-1">
+                </div>
+            </div>
+            <div class="full-width">
+                <label>今週の目標 (達成基準・確認したいこと)</label>
+                <textarea id="repGoals" rows="2" placeholder="未記入の場合は省略されます"></textarea>
+            </div>
+            <div class="full-width">
+                <label>課題・問題点 (※必須項目)</label>
+                <textarea id="repIssues" rows="2" placeholder="困っていること，詰まっていることなど"></textarea>
+            </div>
+            <div class="full-width">
+                <label>依頼・相談事項</label>
+                <textarea id="repRequests" rows="2" placeholder="教員やメンバーへ確認したいこと"></textarea>
+            </div>
+            <div class="full-width">
+                <label>備考 (メモ・アイデア)</label>
+                <textarea id="repRemarks" rows="2" placeholder="未記入の場合は省略されます"></textarea>
+            </div>
+            <div class="full-width">
+                <button class="btn-main" onclick="generateScrapboxReport()" style="width: 100%; padding: 14px; font-size: 1.1rem; border-radius: 10px;">テンプレートに従って生成する</button>
+            </div>
+        </div>
+        <textarea id="reportOutput" class="report-output" placeholder="ここにScrapbox形式のテキストが出力されます．" readonly></textarea>
+        <button class="btn-success" style="width: 100%; margin-top: 20px; padding: 14px; font-size: 1.1rem; border-radius: 10px;" onclick="copyReport()">📋 クリップボードに一括コピー</button>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>タスクの編集</h3>
+        <input type="hidden" id="editTaskId">
+        
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: 700; font-size: 0.95rem; color: var(--primary); display: block; margin-bottom: 8px;">タスク名</label>
+            <input type="text" id="editTaskName" style="width: 100%;" required>
+        </div>
+        
+        <div class="flex-row" style="margin-bottom: 25px;">
+            <div class="flex-1">
+                <label style="font-weight: 700; font-size: 0.95rem; color: var(--primary); display: block; margin-bottom: 8px;">期限 (日付)</label>
+                <input type="date" id="editTaskDate" style="width: 100%;">
+            </div>
+            <div class="flex-1">
+                <label style="font-weight: 700; font-size: 0.95rem; color: var(--primary); display: block; margin-bottom: 8px;">期限 (時刻)</label>
+                <input type="time" id="editTaskTime" style="width: 100%;">
+            </div>
+        </div>
+
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; color: var(--text-main); background: var(--primary-light); padding: 12px; border-radius: 8px;">
+            <input type="checkbox" id="editTaskImportant" style="width:20px; height:20px;"> このタスクを重要に設定する
+        </label>
+        
+        <div class="modal-actions">
+            <button class="btn-outline" onclick="closeEditModal()">キャンセル</button>
+            <button class="btn-main" onclick="saveEditTask()">保存する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem('tasks_v8')) || [];
+
+    function toYMD(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+
+    window.onload = () => {
+        const today = new Date();
+        document.getElementById('repDate').value = toYMD(today);
+        document.getElementById('extEndDate').value = toYMD(today);
+        const weekAgo = new Date(); weekAgo.setDate(today.getDate() - 7);
+        document.getElementById('extStartDate').value = toYMD(weekAgo);
+        renderAll();
+    };
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function addTask() {
+        const nameInput = document.getElementById('taskName');
+        const dateInput = document.getElementById('taskDeadlineDate');
+        const timeInput = document.getElementById('taskDeadlineTime');
+        const isImportant = document.getElementById('taskImportant').checked;
+        
+        if (!nameInput.value.trim()) return alert('タスク名を入力してください．');
+
+        let dDate = dateInput.value;
+        let dTime = timeInput.value;
+        if (dDate && !dTime) dTime = '23:59';
+        else if (!dDate) dTime = '';
+
+        const now = Date.now();
+        tasks.push({
+            id: now, name: nameInput.value.trim(), 
+            deadlineDate: dDate, deadlineTime: dTime,
+            isImportant: isImportant,
+            status: '未着手', progress: 0, subtasks: [],
+            createdAt: now, updatedAt: now, completedAt: null
+        });
+        
+        nameInput.value = ''; dateInput.value = ''; timeInput.value = '';
+        document.getElementById('taskImportant').checked = false;
+        saveAndRender();
+    }
+
+    /* モーダル */
+    function openEditModal(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        
+        document.getElementById('editTaskId').value = task.id;
+        document.getElementById('editTaskName').value = task.name;
+        document.getElementById('editTaskDate').value = task.deadlineDate || '';
+        document.getElementById('editTaskTime').value = task.deadlineTime || '';
+        document.getElementById('editTaskImportant').checked = task.isImportant || false;
+        document.getElementById('editModal').classList.add('active');
+    }
+    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+    function saveEditTask() {
+        const id = parseInt(document.getElementById('editTaskId').value);
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        const newName = document.getElementById('editTaskName').value.trim();
+        if (!newName) return alert('タスク名を入力してください．');
+
+        let dDate = document.getElementById('editTaskDate').value;
+        let dTime = document.getElementById('editTaskTime').value;
+        if (dDate && !dTime) dTime = '23:59';
+        else if (!dDate) dTime = '';
+
+        task.name = newName;
+        task.deadlineDate = dDate;
+        task.deadlineTime = dTime;
+        task.isImportant = document.getElementById('editTaskImportant').checked;
+        task.updatedAt = Date.now();
+
+        closeEditModal();
+        saveAndRender();
+    }
+
+    function editSubtaskName(taskId, subtaskId) {
+        const task = tasks.find(t => t.id === taskId);
+        const subtask = task.subtasks.find(s => s.id === subtaskId);
+        const newName = prompt('サブタスク名を編集:', subtask.name);
+        if (newName && newName.trim()) {
+            subtask.name = newName.trim();
+            task.updatedAt = Date.now(); saveAndRender();
+        }
+    }
+
+    /* データ操作 */
+    function toggleImportant(id) {
+        const t = tasks.find(t => t.id === id);
+        if(t) { t.isImportant = !t.isImportant; t.updatedAt = Date.now(); saveAndRender(); }
+    }
+    function completeTask(id) {
+        const t = tasks.find(t => t.id === id);
+        t.status = '完了'; t.progress = 100; t.updatedAt = Date.now(); t.completedAt = Date.now();
+        t.subtasks.forEach(s => s.completed = true); saveAndRender();
+    }
+    function revertTask(id) {
+        const t = tasks.find(t => t.id === id);
+        t.status = '進行中'; t.updatedAt = Date.now(); t.completedAt = null; saveAndRender();
+    }
+    function updateProgress(id, value) {
+        const t = tasks.find(t => t.id === id);
+        t.progress = parseInt(value);
+        if(t.progress > 0 && t.status === '未着手') t.status = '進行中';
+        t.updatedAt = Date.now(); saveAndRender();
+    }
+    function addSubtask(taskId) {
+        const subName = prompt(`サブタスク名を入力:`);
+        if (subName) {
+            const t = tasks.find(t => t.id === taskId);
+            t.subtasks.push({ id: Date.now(), name: subName, completed: false });
+            t.updatedAt = Date.now(); saveAndRender();
+        }
+    }
+    function toggleSubtask(taskId, subtaskId) {
+        const t = tasks.find(t => t.id === taskId);
+        const st = t.subtasks.find(s => s.id === subtaskId);
+        st.completed = !st.completed; t.updatedAt = Date.now(); saveAndRender();
+    }
+    function deleteTask(id) {
+        if (confirm('本当に削除しますか？')) { tasks = tasks.filter(t => t.id !== id); saveAndRender(); }
+    }
+
+    function saveData() { localStorage.setItem('tasks_v8', JSON.stringify(tasks)); }
+    function saveAndRender() { saveData(); renderAll(); }
+    function renderAll() { renderActiveTasks(); renderCompletedTasks(); }
+
+    /* 描画ロジック */
+    function getDeadlineStatus(dDate, dTime) {
+        if (!dDate) return 'none';
+        const now = new Date();
+        const deadline = new Date(`${dDate}T${dTime || '23:59'}:00`);
+        const diffHours = (deadline - now) / (1000 * 60 * 60);
+        
+        if (diffHours < 0) return 'past';
+        if (diffHours < 24) return 'warning-24h';
+        if (diffHours < 24 * 7) return 'warning-week';
+        return 'safe';
+    }
+
+    function renderActiveTasks() {
+        const tbody = document.getElementById('activeTaskList');
+        tbody.innerHTML = '';
+        
+        const q = document.getElementById('searchActive').value.toLowerCase();
+        const sortOpt = document.getElementById('sortActive').value;
+        const isPinActive = document.getElementById('pinImportantToggle').checked;
+
+        let filtered = tasks.filter(t => t.status !== '完了');
+        if (q) {
+            filtered = filtered.filter(t => t.name.toLowerCase().includes(q) || t.subtasks.some(st => st.name.toLowerCase().includes(q)));
+        }
+
+        filtered.sort((a, b) => {
+            if (isPinActive) {
+                if (a.isImportant && !b.isImportant) return -1;
+                if (!a.isImportant && b.isImportant) return 1;
+            }
+            if (sortOpt === 'deadline-asc' || sortOpt === 'deadline-desc') {
+                const da = a.deadlineDate ? new Date(`${a.deadlineDate}T${a.deadlineTime||'23:59'}`).getTime() : Infinity;
+                const db = b.deadlineDate ? new Date(`${b.deadlineDate}T${b.deadlineTime||'23:59'}`).getTime() : Infinity;
+                return sortOpt === 'deadline-asc' ? da - db : db - da;
+            } else if (sortOpt === 'created-desc') {
+                return b.createdAt - a.createdAt;
+            } else if (sortOpt === 'created-asc') {
+                return a.createdAt - b.createdAt;
+            }
+        });
+
+        filtered.forEach(task => {
+            const tr = document.createElement('tr');
+            const status = getDeadlineStatus(task.deadlineDate, task.deadlineTime);
+            
+            if (status === 'past') tr.classList.add('row-danger');
+            else if (task.isImportant) tr.classList.add('row-important');
+            else if (status === 'warning-24h') tr.classList.add('row-warning-24h');
+            else if (status === 'warning-week') tr.classList.add('row-warning-week');
+
+            let subtasksHtml = '';
+            if (task.subtasks.length > 0) {
+                subtasksHtml = '<ul class="subtask-list">';
+                task.subtasks.forEach(sub => {
+                    const checked = sub.completed ? 'checked' : '';
+                    const style = sub.completed ? 'text-decoration: line-through; color: var(--text-muted);' : '';
+                    const nameDisplay = (q && sub.name.toLowerCase().includes(q)) ? `<mark style="background:var(--primary-light); color:var(--text-main);">${sub.name}</mark>` : sub.name;
+                    subtasksHtml += `
+                        <li>
+                            <input type="checkbox" ${checked} onchange="toggleSubtask(${task.id}, ${sub.id})" style="cursor:pointer; width:16px; height:16px;"> 
+                            <span class="subtask-name" style="${style}" onclick="editSubtaskName(${task.id}, ${sub.id})">${nameDisplay}</span>
+                        </li>`;
+                });
+                subtasksHtml += '</ul>';
+            }
+            
+            const dText = task.deadlineDate ? `${task.deadlineDate.replace(/-/g, '/')} <span style="font-size:0.85em;color:var(--text-muted);">${task.deadlineTime}</span>` : '<span style="color:var(--text-muted);">未設定</span>';
+            const nameDisplay = (q && task.name.toLowerCase().includes(q)) ? `<mark style="background:var(--primary-light); color:var(--text-main);">${task.name}</mark>` : task.name;
+            const starClass = task.isImportant ? 'active' : 'inactive';
+
+            const dColorClass = status === 'past' ? 'color: var(--danger); font-weight: 800;' : '';
+
+            tr.innerHTML = `
+                <td>
+                    <span class="important-icon ${starClass}" onclick="toggleImportant(${task.id})" title="重要を切り替え">★</span>
+                    <strong style="font-size: 1.05rem;">${nameDisplay}</strong>
+                    ${subtasksHtml}
+                </td>
+                <td style="${dColorClass}">${dText}</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="progress-container"><div class="progress-bar" style="width: ${task.progress}%;"></div></div>
+                        <input type="number" value="${task.progress}" min="0" max="100" class="progress-input" onchange="updateProgress(${task.id}, this.value)">%
+                    </div>
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn-outline btn-small" onclick="openEditModal(${task.id})">編集</button>
+                    <button class="btn-outline btn-small" onclick="addSubtask(${task.id})">+サブ</button>
+                    <button class="btn-success btn-small" onclick="completeTask(${task.id})" style="margin-left: 6px;">✓ 完了</button>
+                    <button class="btn-danger btn-small" onclick="deleteTask(${task.id})" style="margin-left: 6px;" title="削除">×</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderCompletedTasks() {
+        const tbody = document.getElementById('completedTaskList');
+        tbody.innerHTML = '';
+        const q = document.getElementById('searchCompleted').value.toLowerCase();
+        const sortOpt = document.getElementById('sortCompleted').value;
+
+        let filtered = tasks.filter(t => t.status === '完了');
+        if (q) {
+            filtered = filtered.filter(t => t.name.toLowerCase().includes(q) || t.subtasks.some(st => st.name.toLowerCase().includes(q)));
+        }
+        filtered.sort((a, b) => sortOpt === 'completed-desc' ? b.completedAt - a.completedAt : a.completedAt - b.completedAt);
+
+        filtered.forEach(task => {
+            const tr = document.createElement('tr');
+            if (task.isImportant) tr.classList.add('row-important');
+
+            const compDate = task.completedAt ? new Date(task.completedAt).toLocaleString('ja-JP').replace(/-/g, '/') : '-';
+            const nameDisplay = (q && task.name.toLowerCase().includes(q)) ? `<mark style="background:var(--primary-light); color:var(--text-main);">${task.name}</mark>` : task.name;
+            const starIcon = task.isImportant ? '<span style="color:var(--accent);">★</span> ' : '';
+            
+            tr.innerHTML = `
+                <td><span style="color: var(--text-muted); text-decoration: line-through;">${starIcon}${nameDisplay}</span></td>
+                <td style="color: var(--text-muted);">${compDate}</td>
+                <td style="text-align: right;">
+                    <button class="btn-outline btn-small" onclick="revertTask(${task.id})">戻す</button>
+                    <button class="btn-danger btn-small" onclick="deleteTask(${task.id})" style="margin-left: 6px;">削除</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- レポート生成 ---
+    function generateScrapboxReport() {
+        const name = document.getElementById('repName').value.trim();
+        const theme = document.getElementById('repTheme').value.trim();
+        const pages = document.getElementById('repPages').value.trim();
+        
+        const rDate = document.getElementById('repDate').value;
+        const rStart = document.getElementById('repStartTime').value;
+        const rEnd = document.getElementById('repEndTime').value;
+        let datetimeStr = '';
+        if (rDate) {
+            datetimeStr = rDate.replace(/-/g, '/');
+            if (rStart && rEnd) datetimeStr += ` ${rStart}-${rEnd}`;
+        }
+
+        const goals = document.getElementById('repGoals').value.trim();
+        const issues = document.getElementById('repIssues').value.trim();
+        const requests = document.getElementById('repRequests').value.trim();
+        const remarks = document.getElementById('repRemarks').value.trim();
+        const dateStr = toYMD(new Date()).replace(/-/g, '/');
+
+        let r = `[進捗-${dateStr}(${name})]\n\n`;
+        if (name) r += `[${name}]\n`;
+        if (theme) r += `[${theme}]\n`;
+        if (pages) r += `[${pages}]\n`;
+        r += `\n`;
+
+        if (goals) r += `[** 今週の目標]\n${goals}\n\n`;
+        if (datetimeStr) r += `[** 実施日時]\n${datetimeStr}\n\n`;
+
+        const extS_val = document.getElementById('extStartDate').value;
+        const extE_val = document.getElementById('extEndDate').value;
+        
+        let completedThisWeek = [];
+        if(extS_val && extE_val) {
+            const extS = new Date(extS_val); extS.setHours(0,0,0,0);
+            const extE = new Date(extE_val); extE.setHours(23,59,59,999);
+            completedThisWeek = tasks.filter(t => t.status === '完了' && t.completedAt >= extS && t.completedAt <= extE);
+        }
+
+        if (completedThisWeek.length > 0) {
+            r += `[** 今週の進捗]\n`;
+            completedThisWeek.forEach(t => { r += `${t.name} を実装・完了\n`; });
+            r += `\n`;
+        }
+
+        r += `[** 現在の状況]\n\n完了\n`;
+        const allCompleted = tasks.filter(t => t.status === '完了');
+        if(allCompleted.length > 0) allCompleted.forEach(t => r += `・${t.name}\n`); else r += `なし\n`;
+
+        r += `\n進行中\n`;
+        const inProgress = tasks.filter(t => t.status === '進行中');
+        if(inProgress.length > 0) inProgress.forEach(t => r += `・${t.name} (${t.progress}%)\n`); else r += `なし\n`;
+
+        r += `\n未着手\n`;
+        const notStarted = tasks.filter(t => t.status === '未着手');
+        if(notStarted.length > 0) notStarted.forEach(t => r += `・${t.name}\n`); else r += `なし\n`;
+        r += `\n`;
+
+        r += `[** 課題・問題点]\n`;
+        r += issues ? `${issues}\n\n` : `特になし\n\n`;
+
+        r += `[** 次回までのToDo]\n|優先|内容|担当|期限|\n`;
+        const activeTasks = tasks.filter(t => t.status !== '完了');
+        
+        if (activeTasks.length > 0) {
+            activeTasks.sort((a, b) => {
+                const da = a.deadlineDate ? new Date(`${a.deadlineDate}T${a.deadlineTime||'23:59'}`).getTime() : Infinity;
+                const db = b.deadlineDate ? new Date(`${b.deadlineDate}T${b.deadlineTime||'23:59'}`).getTime() : Infinity;
+                return da - db;
+            });
+            activeTasks.forEach(t => {
+                const priority = t.isImportant ? '高' : '中';
+                const dl = t.deadlineDate ? `${t.deadlineDate.replace(/-/g, '/')} ${t.deadlineTime}` : '次回ゼミまで';
+                const incompleteSubs = t.subtasks.filter(s => !s.completed);
+                if (incompleteSubs.length > 0) {
+                    incompleteSubs.forEach(s => r += `|${priority}|${t.name}: ${s.name}|自分|${dl}|\n`);
+                } else {
+                    r += `|${priority}|${t.name}|自分|${dl}|\n`;
+                }
+            });
+        } else {
+            r += `|-|要確認|自分|-|\n`;
+        }
+        r += `\n`;
+
+        if (requests) r += `[** 依頼・相談事項]\n${requests}\n\n`;
+        if (remarks) r += `[** 備考]\n${remarks}\n\n`;
+        r += `#進捗\n#PBL2026\n`;
+
+        document.getElementById('reportOutput').value = r;
+    }
+
+    function copyReport() {
+        const text = document.getElementById('reportOutput').value;
+        if(!text) return alert('先にレポートを生成してください．');
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-success[onclick="copyReport()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ コピー完了！';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }).catch(err => { alert('コピーに失敗しました．手動でコピーしてください．'); });
+    }
+</script>
+
+</body>
+</html>
