@@ -590,10 +590,10 @@ function renderUpcoming(activeTasks) {
     container.innerHTML = upcoming.map(task => {
         const date = parseLocalDate(task.deadlineDate);
         const deadlineState = getDeadlineStatus(task.deadlineDate, task.deadlineTime);
-        return `<button type="button" class="upcoming-item" data-action="edit-task" data-task-id="${task.id}" style="width:100%;text-align:left;background:transparent;cursor:pointer;">
+        return `<button type="button" class="upcoming-item${task.isImportant ? " important" : ""}" data-action="edit-task" data-task-id="${task.id}" style="width:100%;text-align:left;background:transparent;cursor:pointer;">
             <span class="date-tile ${deadlineState === "past" ? "past" : ""}"><span>${date.getMonth() + 1}月<br>${date.getDate()}日</span></span>
             <span style="min-width:0">
-                <span class="upcoming-title" style="display:block">${escapeHtml(task.name)}</span>
+                <span class="upcoming-title" style="display:block">${escapeHtml(task.name)}${task.isImportant ? `<span class="important-badge">★ 重要</span>` : ""}</span>
                 <span class="upcoming-meta">${escapeHtml(task.deadlineTime || "23:59")}・${task.progress}% 完了</span>
             </span>
             ${deadlinePill(task)}

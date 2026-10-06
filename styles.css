@@ -332,10 +332,13 @@ label.field-label { display: block; margin-bottom: 6px; color: var(--text-main);
 .upcoming-list, .completed-list, .task-list { display: grid; gap: 10px; }
 .upcoming-item { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: 13px; padding: 12px; border: 1px solid transparent; border-radius: 13px; transition: background 0.18s ease, border-color 0.18s ease; }
 .upcoming-item:hover { border-color: var(--border); background: rgba(255,255,255,0.7); }
+.upcoming-item.important { border-color: rgba(245,158,11,0.22); background: rgba(255,251,235,0.58) !important; }
+.upcoming-item.important:hover { border-color: rgba(245,158,11,0.45); background: rgba(255,251,235,0.82) !important; }
 .date-tile { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; color: var(--primary); background: var(--primary-light); font-size: 0.72rem; font-weight: 900; line-height: 1.05; text-align: center; }
 .date-tile.past { color: var(--danger); background: rgba(254,226,226,0.78); }
 .upcoming-title { overflow: hidden; color: var(--text-main); font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .upcoming-meta { margin-top: 2px; color: #7c98c2; font-size: 0.75rem; }
+.important-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 2px 6px; border-radius: 999px; color: #b45309; background: rgba(254,243,199,0.9); font-size: 0.66rem; font-weight: 900; vertical-align: 1px; }
 
 .status-pill, .deadline-pill {
     display: inline-flex;
