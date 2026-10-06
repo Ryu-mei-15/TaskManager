@@ -114,6 +114,8 @@
         /* レポート画面 */
         .report-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: rgba(255,255,255,0.5); padding: 30px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 20px; }
         .report-form .full-width { grid-column: span 2; }
+        .report-form label { display: block; margin-bottom: 6px; font-weight: 700; color: var(--primary); }
+        .report-form input, .report-form textarea { width: 100%; }
         textarea.report-output { width: 100%; height: 400px; padding: 20px; border-radius: var(--radius-md); resize: vertical; font-family: 'Fira Code', monospace; background: #172554; color: #eff6ff; border: 1px solid #1e3a8a; }
         
         .flex-row { display: flex; gap: 10px; align-items: center; }
@@ -128,6 +130,11 @@
         
         /* 設定・データタブ */
         .settings-card { background: rgba(255,255,255,0.6); padding: 30px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 20px; }
+
+        @media (max-width: 700px) {
+            .report-form { grid-template-columns: 1fr; padding: 20px; }
+            .report-form .full-width { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
@@ -268,27 +275,40 @@
 
     <div id="tab-report" class="tab-content">
         <div class="report-form">
-            <div><label>氏名</label><input type="text" id="repName" value="みゆう"></div>
+            <div><label>氏名</label><input type="text" id="repName" value="山口瑞悠"></div>
             <div>
-                <label>実施日時</label>
-                <div class="flex-row">
-                    <input type="date" id="repDate" class="flex-1"><input type="time" id="repStartTime">
-                    <span style="color:var(--primary); font-weight:bold;">-</span><input type="time" id="repEndTime">
-                </div>
+                <label>日付</label>
+                <input type="date" id="repDate" style="width: 100%;">
             </div>
             <div><label>研究テーマ名</label><input type="text" id="repTheme" value="CatcherX"></div>
-            <div><label>関連ページ (PBL名など)</label><input type="text" id="repPages" value=""></div>
+            <div><label>関連ページ</label><input type="text" id="repPages" value="Road/CatcherX"></div>
             
             <div class="full-width" style="border-top: 2px dashed var(--border); padding-top: 20px;">
-                <label>抽出期間 (完了分)</label>
+                <label>完了タスクの抽出期間</label>
                 <div class="flex-row" style="max-width: 550px;">
                     <input type="date" id="extStartDate" class="flex-1">
                     <span style="color:var(--primary); font-weight:bold;">〜</span>
                     <input type="date" id="extEndDate" class="flex-1">
                 </div>
             </div>
-            <div class="full-width"><label>課題・問題点 (※必須項目)</label><textarea id="repIssues" rows="2"></textarea></div>
-            <div class="full-width"><label>次回までのToDo自動生成 / 依頼事項</label><textarea id="repRequests" rows="2" placeholder="教員やメンバーへ確認したいこと"></textarea></div>
+            <div class="full-width"><label>前回から実際にやったこと（完了タスクへ補足）</label><textarea id="repActualWork" rows="3" placeholder="実装したこと、調べたこと、分析したことなど"></textarea></div>
+            <div><label>できたもの・成果物</label><textarea id="repDeliverables" rows="3" placeholder="URL、ファイル、スクリーンショット、発表資料など"></textarea></div>
+            <div><label>分かったこと</label><textarea id="repFindings" rows="3" placeholder="確認できた内容、予想と違ったこと、新しく気づいたこと"></textarea></div>
+            <div><label>まだできていないこと</label><textarea id="repIncomplete" rows="3" placeholder="未完了のこと、作業できなかった理由"></textarea></div>
+            <div><label>課題・問題点（必須）</label><textarea id="repIssues" rows="3" placeholder="詰まっていること、分からないこと。空欄の場合は「要確認」になります"></textarea></div>
+
+            <div class="full-width" style="border-top: 2px dashed var(--border); padding-top: 20px;"><label>今日取り組むこと</label><textarea id="repTodayWork" rows="2" placeholder="今日の3・4年ゼミ中に進める具体的な作業"></textarea></div>
+            <div><label>次回までにやること：最優先</label><textarea id="repNextHighest" rows="2"></textarea></div>
+            <div><label>次回までにやること：次にやる</label><textarea id="repNextThen" rows="2" placeholder="未完了タスクも自動で追加されます"></textarea></div>
+            <div class="full-width"><label>次回までにやること：余裕があれば</label><textarea id="repNextOptional" rows="2"></textarea></div>
+
+            <div><label>次回ゼミで見せるもの</label><textarea id="repNextShow" rows="2"></textarea></div>
+            <div><label>発表・展示・イベント等</label><textarea id="repEvents" rows="2" placeholder="日程と現在の作業との関係"></textarea></div>
+            <div class="full-width"><label>そこまでに必要な作業</label><textarea id="repPrerequisites" rows="2"></textarea></div>
+            <div><label>教員に確認したいこと</label><textarea id="repConsultTeacher" rows="2"></textarea></div>
+            <div><label>他の学生・先輩に聞きたいこと</label><textarea id="repConsultPeers" rows="2"></textarea></div>
+            <div class="full-width"><label>今日の作業結果</label><textarea id="repTodayResults" rows="3" placeholder="ゼミ中に進めたこと、できたもの、次回までの予定変更"></textarea></div>
+            <div class="full-width"><label>備考</label><textarea id="repNotes" rows="2"></textarea></div>
             <div class="full-width"><button class="btn-main" onclick="generateScrapboxReport()" style="width: 100%; padding: 14px; font-size: 1.1rem;">テンプレート生成</button></div>
         </div>
         <textarea id="reportOutput" class="report-output" readonly></textarea>
@@ -789,63 +809,119 @@
         return ' ' + tagsArray.map(t => `#${t.replace(/\s+/g, '_')}`).join(' ');
     }
 
+    function formatPageLink(value) {
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        return trimmed.startsWith('[') && trimmed.endsWith(']') ? trimmed : `[${trimmed}]`;
+    }
+
+    function indentReportText(value) {
+        return value.trim().split('\n').map(line => ` ${line}`).join('\n');
+    }
+
+    function formatPlanItems(value) {
+        return value.trim().split('\n').filter(Boolean).map(line => `  ${line.trim().startsWith('○') ? line.trim() : `○ ${line.trim()}`}`).join('\n');
+    }
+
     function generateScrapboxReport() {
         const name = document.getElementById('repName').value.trim();
         const theme = document.getElementById('repTheme').value.trim();
         const pages = document.getElementById('repPages').value.trim();
         const rDate = document.getElementById('repDate').value;
-        const rStart = document.getElementById('repStartTime').value;
-        const rEnd = document.getElementById('repEndTime').value;
-        let datetimeStr = '';
-        if (rDate) { datetimeStr = rDate.replace(/-/g, '/'); if (rStart && rEnd) datetimeStr += ` ${rStart}-${rEnd}`; }
+        const actualWork = document.getElementById('repActualWork').value.trim();
+        const deliverables = document.getElementById('repDeliverables').value.trim();
+        const findings = document.getElementById('repFindings').value.trim();
+        const incomplete = document.getElementById('repIncomplete').value.trim();
         const issues = document.getElementById('repIssues').value.trim();
-        const requests = document.getElementById('repRequests').value.trim();
-        const dateStr = toYMD(new Date()).replace(/-/g, '/');
+        const todayWork = document.getElementById('repTodayWork').value.trim();
+        const nextHighest = document.getElementById('repNextHighest').value.trim();
+        const nextThen = document.getElementById('repNextThen').value.trim();
+        const nextOptional = document.getElementById('repNextOptional').value.trim();
+        const nextShow = document.getElementById('repNextShow').value.trim();
+        const events = document.getElementById('repEvents').value.trim();
+        const prerequisites = document.getElementById('repPrerequisites').value.trim();
+        const consultTeacher = document.getElementById('repConsultTeacher').value.trim();
+        const consultPeers = document.getElementById('repConsultPeers').value.trim();
+        const todayResults = document.getElementById('repTodayResults').value.trim();
+        const notes = document.getElementById('repNotes').value.trim();
+        const dateStr = (rDate || toYMD(new Date())).replace(/-/g, '/');
 
-        let r = `[進捗-${dateStr}(${name})]\n\n[${name}]\n[${theme}]\n[${pages}]\n\n`;
-        if (datetimeStr) r += `[** 実施日時]\n${datetimeStr}\n\n`;
+        let r = `進捗-${dateStr}-${name || '氏名'}\n\n`;
+        [name, theme, pages].map(formatPageLink).filter(Boolean).forEach(link => { r += `${link}\n`; });
+        r += `\n[* 前回ゼミから今日まで]\n\n`;
 
         const extS = new Date(document.getElementById('extStartDate').value); extS.setHours(0,0,0,0);
         const extE = new Date(document.getElementById('extEndDate').value); extE.setHours(23,59,59,999);
         const completedThisWeek = tasks.filter(t => t.status === '完了' && t.completedAt >= extS && t.completedAt <= extE);
 
-        if (completedThisWeek.length > 0) {
-            r += `[** 今週の進捗]\n`;
-            completedThisWeek.forEach(t => { r += `${t.name} を実装・完了${formatTagsForReport(t.tags)}\n`; });
+        r += `[** 実際にやったこと]\n`;
+        if (actualWork) r += `${indentReportText(actualWork)}\n`;
+        completedThisWeek.forEach(t => { r += ` ${t.name} を完了${formatTagsForReport(t.tags)}\n`; });
+        if (!actualWork && completedThisWeek.length === 0) r += ` 要確認\n`;
+        r += `\n`;
+
+        if (deliverables || findings) {
+            r += `[** できたもの・分かったこと]\n`;
+            if (deliverables) r += ` 成果物\n${indentReportText(deliverables)}\n`;
+            if (findings) r += ` 分かったこと\n${indentReportText(findings)}\n`;
             r += `\n`;
         }
 
-        r += `[** 現在の状況]\n\n完了\n`;
-        const allCompleted = tasks.filter(t => t.status === '完了');
-        if(allCompleted.length > 0) allCompleted.forEach(t => r += `・${t.name}\n`); else r += `なし\n`;
-        r += `\n進行中\n`;
-        const inProgress = tasks.filter(t => t.status === '進行中');
-        if(inProgress.length > 0) inProgress.forEach(t => r += `・${t.name} (${t.progress}%)\n`); else r += `なし\n`;
-        r += `\n未着手\n`;
-        const notStarted = tasks.filter(t => t.status === '未着手');
-        if(notStarted.length > 0) notStarted.forEach(t => r += `・${t.name}\n`); else r += `なし\n`;
-        r += `\n[** 課題・問題点]\n${issues ? issues : '特になし'}\n\n`;
+        r += `[** できなかったこと・止まっていること]\n`;
+        if (incomplete) r += `${indentReportText(incomplete)}\n`;
+        if (issues) r += `${indentReportText(issues)}\n`;
+        if (!incomplete && !issues) r += ` 要確認\n`;
 
-        r += `[** 次回までのToDo]\n|優先|内容|担当|期限|\n`;
+        r += `\n[* 今日から次回ゼミまで]\n\n`;
+        if (todayWork) r += `[** 今日取り組むこと]\n${indentReportText(todayWork)}\n\n`;
+
+        r += `[** 次回までにやること]\n`;
         const activeTasks = tasks.filter(t => t.status !== '完了').sort((a, b) => {
             const da = a.deadlineDate ? new Date(`${a.deadlineDate}T${a.deadlineTime||'23:59'}`).getTime() : Infinity;
             const db = b.deadlineDate ? new Date(`${b.deadlineDate}T${b.deadlineTime||'23:59'}`).getTime() : Infinity;
             return da - db;
         });
-        
-        if (activeTasks.length > 0) {
-            activeTasks.forEach(t => {
-                const priority = t.isImportant ? '高' : '中';
-                const dl = t.deadlineDate ? `${t.deadlineDate.replace(/-/g, '/')} ${t.deadlineTime}` : '次回ゼミまで';
-                const incompleteSubs = t.subtasks.filter(s => !s.completed);
-                if (incompleteSubs.length > 0) {
-                    incompleteSubs.forEach(s => r += `|${priority}|${t.name}: ${s.name}|自分|${dl}|\n`);
-                } else { r += `|${priority}|${t.name}|自分|${dl}|\n`; }
-            });
-        } else { r += `|-|要確認|自分|-|\n`; }
-        r += `\n`;
-        if (requests) r += `[** 依頼・相談事項]\n${requests}\n\n`;
-        r += `#進捗\n#PBL2026\n`;
+
+        const importantTasks = activeTasks.filter(t => t.isImportant);
+        const otherTasks = activeTasks.filter(t => !t.isImportant);
+        const formatTask = task => {
+            const incompleteSubs = (task.subtasks || []).filter(s => !s.completed);
+            if (incompleteSubs.length > 0) return incompleteSubs.map(s => `  ○ ${task.name}: ${s.name}`).join('\n');
+            return `  ○ ${task.name}`;
+        };
+        if (nextHighest || importantTasks.length > 0) {
+            r += ` 最優先\n`;
+            if (nextHighest) r += `${formatPlanItems(nextHighest)}\n`;
+            importantTasks.forEach(t => { r += `${formatTask(t)}\n`; });
+            r += `\n`;
+        }
+        if (nextThen || otherTasks.length > 0) {
+            r += ` 次にやる\n`;
+            if (nextThen) r += `${formatPlanItems(nextThen)}\n`;
+            otherTasks.forEach(t => { r += `${formatTask(t)}\n`; });
+            r += `\n`;
+        }
+        if (nextOptional) r += ` 余裕があれば\n${formatPlanItems(nextOptional)}\n\n`;
+        if (!nextHighest && !nextThen && !nextOptional && activeTasks.length === 0) r += ` 要確認\n\n`;
+
+        if (nextShow || events || prerequisites) {
+            r += `[** 次に人に見せるもの]\n`;
+            if (nextShow) r += ` 次回ゼミで見せるもの\n${indentReportText(nextShow)}\n`;
+            if (events) r += `\n 発表・展示・イベント等\n${indentReportText(events)}\n`;
+            if (prerequisites) r += `\n そこまでに必要な作業\n${indentReportText(prerequisites)}\n`;
+            r += `\n`;
+        }
+
+        if (consultTeacher || consultPeers) {
+            r += `[** 相談したいこと]\n`;
+            if (consultTeacher) r += ` 教員に確認したいこと\n${indentReportText(consultTeacher)}\n`;
+            if (consultPeers) r += `\n 他の学生・先輩に聞きたいこと\n${indentReportText(consultPeers)}\n`;
+            r += `\n`;
+        }
+
+        if (todayResults) r += `[* 今日の作業結果]\n${indentReportText(todayResults)}\n\n`;
+        if (notes) r += `[** 備考]\n${indentReportText(notes)}\n\n`;
+        r += `#進捗\n#橋田ゼミ2026\n`;
 
         document.getElementById('reportOutput').value = r;
     }
