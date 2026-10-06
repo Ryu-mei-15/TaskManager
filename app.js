@@ -677,7 +677,7 @@ function renderTaskList() {
 
 function taskCardHtml(task) {
     const deadlineState = getDeadlineStatus(task.deadlineDate, task.deadlineTime);
-    const cardClass = deadlineState === "past" ? "overdue" : deadlineState === "warning-24h" ? "soon" : task.isImportant ? "important" : "";
+    const cardClass = taskVisualClass(task, deadlineState);
     const subtasks = task.subtasks.length ? `<ul class="subtask-list">${task.subtasks.map(subtask => `
         <li class="subtask-item ${subtask.completed ? "done" : ""}">
             <input type="checkbox" data-action="toggle-subtask" data-task-id="${task.id}" data-subtask-id="${subtask.id}" ${subtask.completed ? "checked" : ""} aria-label="${escapeHtml(subtask.name)}を完了">
@@ -732,7 +732,8 @@ function renderKanban() {
 }
 
 function kanbanCardHtml(task) {
-    return `<article class="kanban-card" draggable="true" data-task-id="${task.id}" data-action="edit-task">
+    const cardClass = task.status === "完了" ? "" : taskVisualClass(task);
+    return `<article class="kanban-card ${cardClass}" draggable="true" data-task-id="${task.id}" data-action="edit-task">
         <h3 class="kanban-card-title">${task.isImportant ? `<span style="color:var(--accent)">★</span> ` : ""}${escapeHtml(task.name)}</h3>
         <div class="kanban-card-meta">
             ${task.deadlineDate ? deadlinePill(task) : `<span class="deadline-pill">期限なし</span>`}
@@ -741,6 +742,13 @@ function kanbanCardHtml(task) {
         <div class="mini-progress"><span style="width:${task.progress}%"></span></div>
         ${task.tags.length ? `<div class="task-meta" style="margin-left:0">${task.tags.slice(0,2).map(tag => `<span class="task-tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
     </article>`;
+}
+
+function taskVisualClass(task, deadlineState = getDeadlineStatus(task.deadlineDate, task.deadlineTime)) {
+    if (deadlineState === "past") return "overdue";
+    if (deadlineState === "warning-24h") return "urgent";
+    if (deadlineState === "warning-week") return "due-week";
+    return task.isImportant ? "important" : "";
 }
 
 function renderCompletedTasks() {
